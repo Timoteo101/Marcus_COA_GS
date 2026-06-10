@@ -1,0 +1,131 @@
+#include <Wire.h>
+#include <Adafruit_GFX.h>
+#include <Adafruit_SSD1306.h>
+Adafruit_SSD1306 display(128, 64, &Wire, -1);
+
+#define Sens_Vibr 2
+#define Sens_Temp A0
+#define Sens_Luz  A1
+
+#define Led_Vd  4
+#define Led_Am  7
+#define Led_Vm  8
+
+int vibr;
+int temp;
+int luz;
+
+void setup() {
+display.begin(SSD1306_SWITCHCAPVCC, 0x3C);
+display.clearDisplay();
+display.display();
+
+pinMode(Sens_Vibr , INPUT);
+pinMode(Sens_Temp , INPUT);
+pinMode(Sens_Luz , INPUT);
+
+pinMode(Led_Vd , OUTPUT);
+pinMode(Led_Am , OUTPUT);
+pinMode(Led_Vm , OUTPUT);
+
+}
+
+void loop() {
+vibr = digitalRead(Sens_Vibr);
+
+const float BETA = 3950; // should match the Beta Coefficient of the thermistor
+int analogValue = analogRead(A0);
+float celsius = 1 / (log(1 / (1023. / analogValue - 1)) / BETA + 1.0 / 298.15) - 273.15;
+
+luz = analogRead(Sens_Luz);
+
+ display.clearDisplay();
+ display.setTextSize(1);
+ display.setTextColor(SSD1306_WHITE);
+
+if (vibr == 1){
+ display.setCursor(0, 0);
+ display.print("Vibracao Critica ");
+}
+else{
+ display.setCursor(0, 0);
+ display.print("Vibracao Normal ");
+}
+
+
+if (celsius <= 10){
+  display.setCursor(0, 16);
+  display.print("Temperatura: ");
+  display.println(celsius);
+  display.print("Muito Frio");
+}
+else if (celsius <= 18){
+  display.setCursor(0, 16);
+  display.print("Temperatura: ");
+  display.println(celsius);
+  display.print("Frio");
+}
+else if (celsius <= 27){
+  display.setCursor(0, 16);
+  display.print("Temperatura: ");
+  display.println(celsius);
+  display.print("Estavel");
+}
+else if (celsius <= 32){
+  display.setCursor(0, 16);
+  display.print("Temperatura: ");
+  display.println(celsius);
+  display.print("Calor");
+}
+else{
+  display.setCursor(0, 16);
+  display.print("Temperatura: ");
+  display.println(celsius);
+  display.print("Calor Extremo");
+}
+
+
+if(luz >= 800){
+   display.setCursor(0, 45);
+   display.print("Iluminacao:");
+   display.setCursor(0, 54);
+   display.print("Escuro");
+}
+else if(luz >= 500){
+   display.setCursor(0, 45);
+   display.print("Iluminacao:");
+   display.setCursor(0, 54);
+   display.print("Baixa Iluminacao");
+}
+else if(luz >= 200){
+   display.setCursor(0, 45);
+   display.print("Iluminacao:");
+   display.setCursor(0, 54);
+   display.print("Iluminacao Normal");
+}
+else{
+   display.setCursor(0, 45);
+   display.print("Iluminacao:");
+   display.setCursor(0, 54);
+   display.print("Muito Claro");
+}
+display.display();
+
+if (vibr == 0 && celsius > 18 && celsius <= 27 && luz >= 200 && luz < 500) {
+  digitalWrite(Led_Vd, 1);
+  digitalWrite(Led_Am, 0);
+  digitalWrite(Led_Vm, 0);
+}
+
+else if (vibr == 1 && (celsius <= 18 || celsius > 27) && (luz < 200 || luz >= 500)) {
+  digitalWrite(Led_Vd, 0);
+  digitalWrite(Led_Am, 0);
+  digitalWrite(Led_Vm, 1);
+}
+
+else {
+  digitalWrite(Led_Vd, 0);
+  digitalWrite(Led_Am, 1);
+  digitalWrite(Led_Vm, 0);
+}
+}
